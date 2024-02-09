@@ -49,10 +49,10 @@ Napi::String GetActiveAudioOutputSync(const Napi::CallbackInfo& info) {
     }
 
     // Getting the audio device name
-    PROPERTYKEY keyFriendlyName = PKEY_Device_FriendlyName; // Здесь используем переменную
+    PROPERTYKEY keyFriendlyName = PKEY_Device_FriendlyName;
     PROPVARIANT varName;
     PropVariantInit(&varName);
-    hr = pPropertyStore->GetValue(keyFriendlyName, &varName); // Здесь также используем переменную
+    hr = pPropertyStore->GetValue(keyFriendlyName, &varName);
     if (SUCCEEDED(hr)) {
         pwszDeviceName = varName.pwszVal;
     }
@@ -142,10 +142,10 @@ void GetActiveAudioOutputAsync(const Napi::CallbackInfo& info) {
         }
 
         // Getting the audio device name
-        PROPERTYKEY keyFriendlyName = PKEY_Device_FriendlyName; // Здесь используем переменную
+        PROPERTYKEY keyFriendlyName = PKEY_Device_FriendlyName;
         PROPVARIANT varName;
         PropVariantInit(&varName);
-        hr = pPropertyStore->GetValue(keyFriendlyName, &varName); // Здесь также используем переменную
+        hr = pPropertyStore->GetValue(keyFriendlyName, &varName);
         if (SUCCEEDED(hr)) {
             pwszDeviceName = varName.pwszVal;
         }

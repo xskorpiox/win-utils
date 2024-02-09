@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "utils for windows platform",
   "main": "index.js",
+  "private": true,
   "type": "module",
   "scripts": {
     "test": "node index.js"
   },
   "gypfile": true,
-  "author": "Petr",
   "license": "ISC",
   "dependencies": {
-    "bindings": "^1.5.0",
     "node-addon-api": "^7.1.0"
+  },
+  "devDependencies": {
+    "node-gyp": "^10.0.1"
   }
 }

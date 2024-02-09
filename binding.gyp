@@ -2,10 +2,9 @@
   "targets": [
     {
       "target_name": "win-utils",
-      "sources": [ "src/audio/audio.cpp" ],
+      "sources": [ "src/audio/audio.cc" ],
       "include_dirs": [
-        "<!@(node -e \"require('node-addon-api').include\")",
-        "node_modules\\node-addon-api",
+        "<!@(node -p \"require('node-addon-api').include\")",
         "headers"
       ],
       "dependencies": [
