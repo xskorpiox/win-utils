@@ -1,5 +1,6 @@
-import audio from "./src/audio/index.cjs";
+const { getActiveAudioOutputSync, getActiveAudioOutput } = require('./src/audio');
 
-export {
-    audio
+module.exports = {
+    getActiveAudioOutputSync,
+    getActiveAudioOutput,
 }

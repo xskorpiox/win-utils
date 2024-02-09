@@ -4,7 +4,6 @@
   "description": "utils for windows platform",
   "main": "index.js",
   "private": true,
-  "type": "module",
   "scripts": {
     "test": "node index.js"
   },
