@@ -2,7 +2,7 @@
   "targets": [
     {
       "target_name": "win-utils",
-      "sources": [ "src/audio/audio.cc" ],
+      "sources": [ "src/main.cc" ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
         "headers"
@@ -15,6 +15,7 @@
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
       "libraries": [
         "-lpropsys",
+        "setupapi.lib",
       ],
     }
   ]
