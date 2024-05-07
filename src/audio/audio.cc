@@ -170,11 +170,3 @@ void GetActiveAudioOutputAsync(const Napi::CallbackInfo& info) {
 
     }).detach();
 }
-
-Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    exports.Set(Napi::String::New(env, "getActiveAudioOutputSync"), Napi::Function::New(env, GetActiveAudioOutputSync));
-    exports.Set(Napi::String::New(env, "getActiveAudioOutputAsync"), Napi::Function::New(env, GetActiveAudioOutputAsync));
-    return exports;
-}
-
-NODE_API_MODULE(addon, Init)
