@@ -77,25 +77,24 @@ Napi::String GetActiveAudioOutputSync(const Napi::CallbackInfo& info) {
 void GetActiveAudioOutputAsync(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    // run async operation
+    // Run async operation
     Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(
             env,
             info[0].As<Napi::Function>(), // Callback
-            "Win-Utils", // resource name (anything)
+            "Win-Utils", // Resource name (anything)
             0, // Maximum number of threads that can call this callback function simultaneously
-            1 // Minimum number of threads that must be available to call this callback function
+            1  // Minimum number of threads that must be available to call this callback function
     );
 
-    // async execution
+    // Async execution
     std::thread([tsfn]() mutable {
         HRESULT hr;
-        IMMDeviceEnumerator *pEnumerator = NULL;
-        IMMDevice *pDevice = NULL;
-        IPropertyStore *pPropertyStore = NULL;
-        LPWSTR pwszDeviceName = NULL;
+        IMMDeviceEnumerator* pEnumerator = NULL;
+        IMMDevice* pDevice = NULL;
+        IPropertyStore* pPropertyStore = NULL;
 
         // COM initialization
-        hr = CoInitialize(NULL);
+        hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
         if (FAILED(hr)) {
             tsfn.NonBlockingCall([tsfn](Napi::Env env, Napi::Function jsCallback) {
                 jsCallback.Call({ Napi::String::New(env, "") });
@@ -106,7 +105,7 @@ void GetActiveAudioOutputAsync(const Napi::CallbackInfo& info) {
 
         // Creating an object to enumerate audio devices
         hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator),
-                              (void **) &pEnumerator);
+                              (void**)&pEnumerator);
         if (FAILED(hr)) {
             CoUninitialize();
             tsfn.NonBlockingCall([tsfn](Napi::Env env, Napi::Function jsCallback) {
@@ -146,23 +145,29 @@ void GetActiveAudioOutputAsync(const Napi::CallbackInfo& info) {
         PROPVARIANT varName;
         PropVariantInit(&varName);
         hr = pPropertyStore->GetValue(keyFriendlyName, &varName);
-        if (SUCCEEDED(hr)) {
-            pwszDeviceName = varName.pwszVal;
+
+        std::wstring deviceName; // Use std::wstring to store a copy of the device name
+
+        if (SUCCEEDED(hr) && varName.vt == VT_LPWSTR && varName.pwszVal != NULL) {
+            deviceName = varName.pwszVal; // Copy the device name
         }
 
-        // clean
+        // Clean up
         PropVariantClear(&varName);
         pPropertyStore->Release();
         pDevice->Release();
         pEnumerator->Release();
         CoUninitialize();
 
+        // Convert std::wstring to std::u16string
+        std::u16string u16DeviceName(deviceName.begin(), deviceName.end());
+
         // Callback invocation in the main Node.js thread
-        tsfn.NonBlockingCall([pwszDeviceName, tsfn](Napi::Env env, Napi::Function jsCallback) {
-            if (pwszDeviceName != NULL) {
-                jsCallback.Call({Napi::String::New(env, reinterpret_cast<const char16_t *>(pwszDeviceName))});
+        tsfn.NonBlockingCall([u16DeviceName, tsfn](Napi::Env env, Napi::Function jsCallback) {
+            if (!u16DeviceName.empty()) {
+                jsCallback.Call({ Napi::String::New(env, u16DeviceName) });
             } else {
-                jsCallback.Call({Napi::String::New(env, "")});
+                jsCallback.Call({ Napi::String::New(env, "") });
             }
             tsfn.Release();
             return;
