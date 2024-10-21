@@ -7,6 +7,7 @@
 #include "audio/audio.cc"
 #include "system/getWindowHWND.cc"
 #include "system/sendMessageToWindow.cc"
+#include "display/display.cc"
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     // audio
@@ -20,6 +21,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     // system
     exports.Set("getWindowHWNDbyTitle", Napi::Function::New(env, GetWindowHWNDbyTitle));
     exports.Set("sendMessageToWindow", Napi::Function::New(env, SendMessageToWindow));
+
+    // display
+    exports.Set("getDisplayInfo", Napi::Function::New(env, GetDisplayInfo));
 
     return exports;
 }

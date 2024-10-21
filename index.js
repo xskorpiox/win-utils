@@ -1,6 +1,7 @@
 const { getActiveAudioOutputSync, getActiveAudioOutput } = require('./src/audio');
 const { getRemovableDrives, setDiskAttribute } = require('./src/usb');
 const { getWindowHWNDbyTitle, emitMessageToWindow, closeWindowByTitle } = require('./src/system');
+const { getDisplaysInfo } = require('./src/display');
 
 module.exports = {
     //audio
@@ -14,5 +15,8 @@ module.exports = {
     //system
     getWindowHWNDbyTitle,
     emitMessageToWindow,
-    closeWindowByTitle
+    closeWindowByTitle,
+
+    //display
+    getDisplaysInfo,
 }

@@ -1,6 +1,6 @@
 {
   "name": "win-utils",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "utils for windows platform",
   "main": "index.js",
   "private": true,
