@@ -6,6 +6,7 @@ const WinUtils = require('../../build/Release/win-utils');
  * @property {number} [scaling] - The display scaling mode.
  * @property {number} [rotation] - The display rotation (0, 90, 180, 270).
  * @property {boolean} [isStereo] - Indicates if the monitor supports stereo mode.
+ * @property {boolean} [isInternal] - Indicates if the monitor is internal.
  * @property {number} id - Unique identifier for the monitor.
  * @property {number} positionX - The X coordinate of the monitor's position.
  * @property {number} positionY - The Y coordinate of the monitor's position.
@@ -28,6 +29,7 @@ const WinUtils = require('../../build/Release/win-utils');
  * @property {number} [targetId] - Target ID.
  * @property {number} [adapterIdHigh] - High part of the adapter ID.
  * @property {number} [adapterIdLow] - Low part of the adapter ID.
+ * @property {number} [scalingPercentage] - The scaling percentage of the monitor (e.g., 100, 125, 150).
  */
 
 
