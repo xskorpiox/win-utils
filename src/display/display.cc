@@ -1,16 +1,22 @@
 #define UNICODE
 #define _UNICODE
 
+// min version = Windows 10
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0A00 // Windows 10
+#endif
+
 #include <napi.h>
 #include <windows.h>
+#include <ShellScalingAPI.h> // after windows.h
 #include <vector>
 #include <string>
 #include <iostream>
 #include <cstdarg>
-#include <cstdarg>
 #include "common.cc"
 
 #pragma comment(lib, "User32.lib")
+#pragma comment(lib, "Shcore.lib") // For scalling
 
 // main
 Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
@@ -18,6 +24,8 @@ Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
 
     // set UTF-8
     SetConsoleOutputCP(CP_UTF8);
+
+    DPI_AWARENESS_CONTEXT previousContext = SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
     UINT32 pathCount = 0, modeCount = 0;
     if (GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS, &pathCount, &modeCount) != ERROR_SUCCESS) {
@@ -29,7 +37,7 @@ Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
     std::vector<DISPLAYCONFIG_MODE_INFO> modes(modeCount);
 
     if (QueryDisplayConfig(
-            QDC_ONLY_ACTIVE_PATHS | QDC_INCLUDE_HMD, // QDC_ONLY_ACTIVE_PATHS | QDC_DATABASE_CURRENT | QDC_ALL_PATHS
+            QDC_ONLY_ACTIVE_PATHS | QDC_INCLUDE_HMD,
             &pathCount,
             paths.data(),
             &modeCount,
@@ -52,6 +60,9 @@ Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
         // connection type
         DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY outputTechnology = path.targetInfo.outputTechnology;
         monitorInfo.Set("outputTechnology", Napi::Number::New(env, static_cast<int>(outputTechnology)));
+
+        bool isInternal = (outputTechnology == DISPLAYCONFIG_OUTPUT_TECHNOLOGY_INTERNAL);
+        monitorInfo.Set("isInternal", Napi::Boolean::New(env, isInternal));
 
         // scaling
         DISPLAYCONFIG_SCALING scaling = path.targetInfo.scaling;
@@ -77,6 +88,7 @@ Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
         targetDeviceName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
 
         MONITORINFOEXW monitorInfoEx = {};
+        HMONITOR hMonitor = NULL;
 
         if (DisplayConfigGetDeviceInfo(&targetDeviceName.header) == ERROR_SUCCESS) {
 
@@ -94,7 +106,7 @@ Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
                 }
             }
 
-            HMONITOR hMonitor = MonitorFromPoint(*(POINT*)&point, MONITOR_DEFAULTTONEAREST);
+            hMonitor = MonitorFromPoint(*(POINT*)&point, MONITOR_DEFAULTTONEAREST);
             monitorInfoEx.cbSize = sizeof(MONITORINFOEXW);
             if (GetMonitorInfoW(hMonitor, &monitorInfoEx)) {
                 // generate Id like chromium engine (m114) version
@@ -127,6 +139,7 @@ Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
         monitorInfo.Set("monitorFriendlyDeviceName", Napi::String::New(env, WideToUTF8(targetDeviceName.monitorFriendlyDeviceName)));
         monitorInfo.Set("monitorDevicePath", Napi::String::New(env, WideToUTF8(targetDeviceName.monitorDevicePath)));
         monitorInfo.Set("szDevice", Napi::String::New(env, WideToUTF8(monitorInfoEx.szDevice)));
+
         // is extended
         bool isExtended = isActive && !monitorInfo.Get("isPrimary").As<Napi::Boolean>().Value();
         monitorInfo.Set("isExtended", Napi::Boolean::New(env, isExtended));
@@ -173,8 +186,28 @@ Napi::Value GetDisplayInfo(const Napi::CallbackInfo& info) {
             monitorInfo.Set("positionY", Napi::Number::New(env, positionY));
         }
 
+        DPI_AWARENESS_CONTEXT previousContext = SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+        // get scaling
+        UINT dpiX = 96, dpiY = 96; // default values
+        if (hMonitor) {
+            HRESULT hr = GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+            std::cout << "hr: " << hr << std::endl;
+            if (SUCCEEDED(hr)) {
+                // calculate scape percent
+                double scalingFactor = dpiX / 96.0 * 100; // 96 DPI === 100%
+                monitorInfo.Set("scalingPercentage", Napi::Number::New(env, scalingFactor));
+            } else {
+                monitorInfo.Set("scalingPercentage", Napi::Number::New(env, 100.0));
+            }
+        } else {
+            monitorInfo.Set("scalingPercentage", Napi::Number::New(env, 100.0));
+        }
+
         result.Set(index++, monitorInfo);
     }
+
+    SetThreadDpiAwarenessContext(previousContext);
 
     return result;
 }
